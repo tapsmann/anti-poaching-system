@@ -1,9 +1,15 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+const API_BASE_URL = configuredApiUrl || (
+  import.meta.env.DEV
+    ? '/api'
+    : 'https://anti-poaching-backend.onrender.com/api'
+);
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 20_000,
   headers: {
     'Content-Type': 'application/json',
   },
