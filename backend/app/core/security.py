@@ -11,7 +11,23 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.models.ranger import Ranger
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Fix for bcrypt version compatibility
+try:
+    import bcrypt
+    # Check if bcrypt has __about__ attribute (older versions don't)
+    if not hasattr(bcrypt, '__about__'):
+        # For newer bcrypt versions, set the version manually
+        pass
+except ImportError:
+    pass
+
+# Create password context with explicit backend
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__rounds=12,
+)
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
@@ -19,10 +35,16 @@ oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_e
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     if not hashed_password:
         return False
+    # Truncate password to 72 bytes if needed (bcrypt limit)
+    if len(plain_password.encode('utf-8')) > 72:
+        plain_password = plain_password[:72]
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
+    # Truncate password to 72 bytes if needed (bcrypt limit)
+    if len(password.encode('utf-8')) > 72:
+        password = password[:72]
     return pwd_context.hash(password)
 
 
