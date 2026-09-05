@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
 from app.core.database import get_db
-from app.core.security import get_current_ranger
+from app.core.security import get_current_ranger, require_admin
 from app.models.ranger import Ranger
 from app.models.species import Species
 from pydantic import BaseModel
@@ -52,22 +52,22 @@ def get_species(
     skip: int = 0,
     limit: int = 100,
     conservation_status: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: Ranger = Depends(get_current_ranger),
 ):
-    """Get all species with optional filtering"""
     query = db.query(Species)
     if conservation_status:
         query = query.filter(Species.conservation_status == conservation_status)
     species = query.offset(skip).limit(limit).all()
     return species
 
-# --- SEARCH Route (MUST come BEFORE /{species_id}) ---
+# --- SEARCH Route ---
 @router.get("/search", response_model=List[SpeciesResponse])
 def search_species(
     q: str = Query(..., min_length=1, description="Search term for species name or scientific name"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _: Ranger = Depends(get_current_ranger),
 ):
-    """Search species by name or scientific_name"""
     species = db.query(Species).filter(
         or_(
             Species.name.ilike(f"%{q}%"),
@@ -76,10 +76,13 @@ def search_species(
     ).all()
     return species
 
-# --- GET by ID Route (MUST come AFTER /search) ---
+# --- GET by ID Route ---
 @router.get("/{species_id}", response_model=SpeciesResponse)
-def get_species_by_id(species_id: int, db: Session = Depends(get_db)):
-    """Get a single species by ID"""
+def get_species_by_id(
+    species_id: int,
+    db: Session = Depends(get_db),
+    _: Ranger = Depends(get_current_ranger),
+):
     species = db.query(Species).filter(Species.id == species_id).first()
     if not species:
         raise HTTPException(status_code=404, detail="Species not found")
@@ -90,9 +93,8 @@ def get_species_by_id(species_id: int, db: Session = Depends(get_db)):
 def create_species(
     species: SpeciesCreate,
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    admin: Ranger = Depends(require_admin),
 ):
-    """Create a new species"""
     db_species = Species(**species.model_dump())
     db.add(db_species)
     db.commit()
@@ -104,9 +106,9 @@ def create_species(
 def update_species(
     species_id: int,
     species: SpeciesUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    admin: Ranger = Depends(require_admin),
 ):
-    """Update an existing species"""
     db_species = db.query(Species).filter(Species.id == species_id).first()
     if not db_species:
         raise HTTPException(status_code=404, detail="Species not found")
@@ -120,11 +122,13 @@ def update_species(
 
 # --- DELETE Routes ---
 @router.delete("/{species_id}", status_code=204)
-def delete_species(species_id: int, db: Session = Depends(get_db)):
-    """Delete a species"""
+def delete_species(
+    species_id: int,
+    db: Session = Depends(get_db),
+    admin: Ranger = Depends(require_admin),
+):
     db_species = db.query(Species).filter(Species.id == species_id).first()
     if not db_species:
         raise HTTPException(status_code=404, detail="Species not found")
     db.delete(db_species)
     db.commit()
-    return {"message": "Species deleted successfully"}

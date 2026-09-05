@@ -2,7 +2,7 @@
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import get_current_ranger
+from app.core.security import get_current_ranger, require_admin, check_ranger_can_modify
 from app.models.ranger import Ranger
 from app.schemas.schemas import RangerCreate, RangerResponse, RangerUpdate
 from app.schemas.serializers import serialize_ranger
@@ -18,9 +18,13 @@ def get_rangers(
     limit: int = 100,
     is_active: bool | None = None,
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    current_ranger: Ranger = Depends(get_current_ranger),
 ):
     query = db.query(Ranger)
+    if current_ranger.role == "ranger":
+        if current_ranger.assigned_area_id is None:
+            return []
+        query = query.filter(Ranger.assigned_area_id == current_ranger.assigned_area_id)
     if is_active is not None:
         query = query.filter(Ranger.is_active == is_active)
     return [serialize_ranger(r) for r in query.offset(skip).limit(limit).all()]
@@ -30,11 +34,14 @@ def get_rangers(
 def get_ranger_by_id(
     ranger_id: int,
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    current_ranger: Ranger = Depends(get_current_ranger),
 ):
     ranger = db.query(Ranger).filter(Ranger.id == ranger_id).first()
     if not ranger:
         raise HTTPException(status_code=404, detail="Ranger not found")
+    if current_ranger.role == "ranger":
+        if not check_ranger_can_access_area(current_ranger, ranger.assigned_area_id):
+            raise HTTPException(status_code=403, detail="Access denied: ranger is in a different park")
     return serialize_ranger(ranger)
 
 
@@ -42,7 +49,7 @@ def get_ranger_by_id(
 def create_ranger(
     ranger: RangerCreate,
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    admin: Ranger = Depends(require_admin),
 ):
     existing = db.query(Ranger).filter(
         (Ranger.badge_number == ranger.badge_number) | (Ranger.email == ranger.email)
@@ -52,6 +59,8 @@ def create_ranger(
 
     data = ranger.model_dump(exclude={"password", "latitude", "longitude"})
     db_ranger = Ranger(**data, password_hash=get_password_hash(ranger.password or "ranger123"))
+    if ranger.assigned_area_id is not None:
+        db_ranger.assigned_area_id = ranger.assigned_area_id
     if ranger.latitude is not None and ranger.longitude is not None:
         loc = point_from_latlng(ranger.latitude, ranger.longitude)
         db_ranger.base_location = loc
@@ -67,11 +76,14 @@ def update_ranger(
     ranger_id: int,
     ranger: RangerUpdate,
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    current_ranger: Ranger = Depends(get_current_ranger),
 ):
     db_ranger = db.query(Ranger).filter(Ranger.id == ranger_id).first()
     if not db_ranger:
         raise HTTPException(status_code=404, detail="Ranger not found")
+
+    if not check_ranger_can_modify(current_ranger, ranger_id):
+        raise HTTPException(status_code=403, detail="Admin or supervisor privileges required to modify other rangers")
 
     for key, value in ranger.model_dump(exclude_unset=True, exclude={"password", "latitude", "longitude"}).items():
         setattr(db_ranger, key, value)
@@ -90,7 +102,7 @@ def update_ranger(
 def delete_ranger(
     ranger_id: int,
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    admin: Ranger = Depends(require_admin),
 ):
     db_ranger = db.query(Ranger).filter(Ranger.id == ranger_id).first()
     if not db_ranger:

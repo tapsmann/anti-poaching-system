@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authApi } from '../api/endpoints';
+﻿import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { authApi } from "../api/endpoints";
 
 const AuthContext = createContext(null);
 
@@ -8,7 +8,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const loadUser = useCallback(async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem("access_token");
     if (!token) {
       setRanger(null);
       setLoading(false);
@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
       const response = await authApi.me();
       setRanger(response.data);
     } catch {
-      localStorage.removeItem('access_token');
+      localStorage.removeItem("access_token");
       setRanger(null);
     } finally {
       setLoading(false);
@@ -30,28 +30,41 @@ export function AuthProvider({ children }) {
   }, [loadUser]);
 
   const login = async (email, password) => {
+    localStorage.removeItem("access_token");
     const response = await authApi.login(email, password);
-    localStorage.setItem('access_token', response.data.access_token);
+    localStorage.setItem("access_token", response.data.access_token);
     setRanger(response.data.ranger);
     return response.data.ranger;
   };
 
   const logout = () => {
-    localStorage.removeItem('access_token');
+    localStorage.removeItem("access_token");
     setRanger(null);
   };
 
-  return (
-    <AuthContext.Provider value={{ ranger, loading, login, logout, refreshUser: loadUser }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const isAdmin = ranger?.role === "admin";
+  const isSupervisor = ranger?.role === "supervisor" || isAdmin;
+  const isRanger = ranger?.role === "ranger";
+
+  const value = {
+    ranger,
+    loading,
+    login,
+    logout,
+    refreshUser: loadUser,
+    isAdmin,
+    isSupervisor,
+    isRanger,
+    role: ranger?.role || "ranger",
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
 }

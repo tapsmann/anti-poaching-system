@@ -17,18 +17,24 @@ from app.schemas.schemas import (
 
 def serialize_ranger(ranger: Ranger) -> RangerResponse:
     lat, lng = latlng_from_geometry(ranger.current_location or ranger.base_location)
+    assigned_area_name = None
+    if hasattr(ranger, 'assigned_area') and ranger.assigned_area:
+        assigned_area_name = ranger.assigned_area.name
     return RangerResponse(
         id=ranger.id,
         name=ranger.name,
         badge_number=ranger.badge_number,
         email=ranger.email,
         phone=ranger.phone,
+        role=ranger.role or "ranger",
         rank=ranger.rank,
         specialization=ranger.specialization,
         is_active=ranger.is_active,
         is_on_duty=ranger.is_on_duty,
         latitude=lat,
         longitude=lng,
+        assigned_area_id=ranger.assigned_area_id,
+        assigned_area_name=assigned_area_name,
         hire_date=ranger.hire_date,
         created_at=ranger.created_at,
         updated_at=ranger.updated_at,

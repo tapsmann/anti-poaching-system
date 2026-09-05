@@ -5,9 +5,24 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.geo import point_from_latlng
 from app.core.config import settings
-from app.core.security import create_access_token, create_password_reset_token, get_current_ranger, get_password_hash, get_reset_email, verify_password
+from app.core.security import (
+    create_access_token,
+    create_password_reset_token,
+    get_current_ranger,
+    get_password_hash,
+    get_reset_email,
+    require_admin,
+    verify_password,
+)
 from app.models.ranger import Ranger
-from app.schemas.schemas import PasswordChangeRequest, PasswordResetConfirm, PasswordResetRequest, RangerCreate, RangerResponse, TokenResponse
+from app.schemas.schemas import (
+    PasswordChangeRequest,
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    RangerCreate,
+    RangerResponse,
+    TokenResponse,
+)
 from app.schemas.serializers import serialize_ranger
 
 router = APIRouter()
@@ -22,7 +37,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    token = create_access_token({"sub": str(ranger.id)})
+    token = create_access_token({
+        "sub": str(ranger.id),
+        "role": ranger.role or "ranger",
+        "area_id": ranger.assigned_area_id,
+    })
     return TokenResponse(access_token=token, ranger=serialize_ranger(ranger))
 
 
@@ -52,9 +71,33 @@ def register_ranger(ranger_in: RangerCreate, db: Session = Depends(get_db)):
     return serialize_ranger(db_ranger)
 
 
+@router.post("/admin/register", response_model=RangerResponse, status_code=201)
+def admin_register_ranger(
+    ranger_in: RangerCreate,
+    db: Session = Depends(get_db),
+    admin: Ranger = Depends(require_admin),
+):
+    existing = db.query(Ranger).filter(
+        (Ranger.email == ranger_in.email) | (Ranger.badge_number == ranger_in.badge_number)
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Ranger with this email or badge already exists")
+
+    data = ranger_in.model_dump(exclude={"password", "latitude", "longitude"})
+    db_ranger = Ranger(**data, password_hash=get_password_hash(ranger_in.password))
+    if ranger_in.latitude is not None and ranger_in.longitude is not None:
+        loc = point_from_latlng(ranger_in.latitude, ranger_in.longitude)
+        db_ranger.base_location = loc
+        db_ranger.current_location = loc
+
+    db.add(db_ranger)
+    db.commit()
+    db.refresh(db_ranger)
+    return serialize_ranger(db_ranger)
+
+
 @router.post("/request-password-reset")
 def request_password_reset(payload: PasswordResetRequest, db: Session = Depends(get_db)):
-    """Request a reset token; connect this to email/SMS before production."""
     ranger = db.query(Ranger).filter(Ranger.email == payload.email).first()
     response = {"message": "If the account exists, password reset instructions have been sent."}
     if ranger and settings.ENVIRONMENT.lower() != "production":

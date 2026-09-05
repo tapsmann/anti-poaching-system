@@ -1,23 +1,16 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+﻿import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
 
 const ProtectedRoute = ({ children }) => {
-  const { ranger, loading } = useAuth();
+  const token = localStorage.getItem("access_token");
   const location = useLocation();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-earth-50">
-        <p className="text-zim-700 font-medium">Loading...</p>
-      </div>
-    );
-  }
-
-  if (!ranger) {
+  // If no token, redirect to login
+  if (!token) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // If token exists, render children
   return children;
 };
 

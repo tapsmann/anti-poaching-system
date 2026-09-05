@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "your-super-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
+    RESET_TOKEN_EXPIRE_MINUTES: int = 30
+    ENVIRONMENT: str = "development"
     REGION: str = "zimbabwe"
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000"
 

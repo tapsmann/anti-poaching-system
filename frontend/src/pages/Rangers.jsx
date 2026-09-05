@@ -1,8 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Search, Wifi } from 'lucide-react';
+import { Search, Wifi, Shield } from 'lucide-react';
 import { rangersApi } from '../api/endpoints';
+import { useAuth } from '../context/AuthContext';
+
+const roleColors = { admin: 'bg-amber-100 text-amber-700 border-amber-200', supervisor: 'bg-blue-100 text-blue-700 border-blue-200', ranger: 'bg-green-100 text-green-700 border-green-200' };
 
 const Rangers = () => {
+  const { isAdmin } = useAuth();
   const [rangers, setRangers] = useState([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -24,18 +28,18 @@ const Rangers = () => {
 
   const visible = useMemo(() => 
     rangers.filter((r) => 
-      `${r.name} ${r.badge_number} ${r.rank || ''}`.toLowerCase().includes(query.toLowerCase())
+      `${r.name} ${r.badge_number} ${r.rank || ''} ${r.role || ''}`.toLowerCase().includes(query.toLowerCase())
     ), [rangers, query]
   );
 
-  if (loading) return <div className="text-center py-10">Loading rangers…</div>;
+  if (loading) return <div className="text-center py-10">Loading rangers...</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-zim-800">Rangers</h1>
-          <p className="text-sm text-gray-500">Live ranger roster from the backend</p>
+          <p className="text-sm text-gray-500">{visible.length} rangers</p>
         </div>
         <button onClick={load} className="btn-primary">Refresh</button>
       </div>
@@ -47,7 +51,7 @@ const Rangers = () => {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search rangers…"
+          placeholder="Search rangers..."
           className="w-full pl-10 pr-4 py-2 border border-earth-200 rounded-xl"
         />
       </div>
@@ -59,9 +63,16 @@ const Rangers = () => {
               <div className="w-12 h-12 rounded-full bg-zim-600 text-white flex items-center justify-center font-semibold">
                 {ranger.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
               </div>
-              <div>
-                <h2 className="font-semibold text-zim-800">{ranger.name}</h2>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h2 className="font-semibold text-zim-800">{ranger.name}</h2>
+                  <span className={`text-xs px-1.5 py-0.5 rounded border font-semibold ${roleColors[ranger.role] || roleColors.ranger}`}>
+                    <Shield size={10} className="inline mr-0.5" />
+                    {(ranger.role || 'ranger').toUpperCase()}
+                  </span>
+                </div>
                 <p className="text-sm text-gray-500">{ranger.badge_number} · {ranger.rank?.replace('_', ' ') || 'Officer'}</p>
+                {ranger.assigned_area_name && <p className="text-xs text-zim-600 mt-0.5">Park: {ranger.assigned_area_name}</p>}
                 <p className="mt-2 text-xs flex items-center gap-1">
                   <span className={`w-2 h-2 rounded-full ${ranger.is_on_duty ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
                   {ranger.is_on_duty ? 'On duty' : 'Off duty'}

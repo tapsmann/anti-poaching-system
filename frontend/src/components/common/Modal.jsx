@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
-const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
+const Modal = ({ isOpen, onClose, title, children, size = 'md', wide }) => {
   const closeButtonRef = useRef(null);
 
   useEffect(() => {
@@ -21,7 +21,7 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
     md: 'max-w-lg',
     lg: 'max-w-2xl',
     xl: 'max-w-4xl',
-  }[size];
+  }[wide ? 'lg' : size];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">

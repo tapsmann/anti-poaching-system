@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.geo import point_from_latlng
-from app.core.security import get_current_ranger
+from app.core.security import get_current_ranger, require_admin, require_supervisor_or_admin, check_ranger_can_access_area
 from app.models.incident import Incident
 from app.models.ranger import Ranger
 from app.schemas.schemas import IncidentCreate, IncidentResponse, IncidentUpdate
@@ -23,9 +23,13 @@ def get_incidents(
     incident_type: str | None = None,
     is_resolved: bool | None = None,
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    current_ranger: Ranger = Depends(get_current_ranger),
 ):
     query = db.query(Incident)
+    if current_ranger.role == "ranger":
+        if current_ranger.assigned_area_id is None:
+            return []
+        query = query.filter(Incident.protected_area_id == current_ranger.assigned_area_id)
     if severity:
         query = query.filter(Incident.severity == severity)
     if incident_type:
@@ -40,11 +44,14 @@ def get_incidents(
 def get_incident_by_id(
     incident_id: int,
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    current_ranger: Ranger = Depends(get_current_ranger),
 ):
     incident = db.query(Incident).filter(Incident.id == incident_id).first()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
+    if current_ranger.role == "ranger":
+        if not check_ranger_can_access_area(current_ranger, incident.protected_area_id):
+            raise HTTPException(status_code=403, detail="Access denied: incident is in a different park")
     return serialize_incident(incident)
 
 
@@ -54,6 +61,11 @@ def create_incident(
     db: Session = Depends(get_db),
     current_ranger: Ranger = Depends(get_current_ranger),
 ):
+    if current_ranger.role == "ranger":
+        if current_ranger.assigned_area_id is None:
+            raise HTTPException(status_code=403, detail="No park assigned to this ranger")
+        if incident.protected_area_id and incident.protected_area_id != current_ranger.assigned_area_id:
+            raise HTTPException(status_code=403, detail="Access denied: cannot create incidents in a different park")
     risk = predict_risk_score(incident.latitude, incident.longitude)
     db_incident = Incident(
         location=point_from_latlng(incident.latitude, incident.longitude),
@@ -61,7 +73,7 @@ def create_incident(
         description=incident.description,
         severity=incident.severity,
         species_id=incident.species_id,
-        protected_area_id=incident.protected_area_id,
+        protected_area_id=incident.protected_area_id or current_ranger.assigned_area_id,
         ranger_id=incident.ranger_id or current_ranger.id,
         verified=incident.verified,
         is_resolved=incident.is_resolved,
@@ -79,11 +91,14 @@ def update_incident(
     incident_id: int,
     incident: IncidentUpdate,
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    current_ranger: Ranger = Depends(get_current_ranger),
 ):
     db_incident = db.query(Incident).filter(Incident.id == incident_id).first()
     if not db_incident:
         raise HTTPException(status_code=404, detail="Incident not found")
+    if current_ranger.role == "ranger":
+        if not check_ranger_can_access_area(current_ranger, db_incident.protected_area_id):
+            raise HTTPException(status_code=403, detail="Access denied: incident is in a different park")
 
     updates = incident.model_dump(exclude_unset=True, exclude={"latitude", "longitude"})
     for key, value in updates.items():
@@ -102,11 +117,14 @@ def update_incident(
 def resolve_incident(
     incident_id: int,
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    current_ranger: Ranger = Depends(get_current_ranger),
 ):
     db_incident = db.query(Incident).filter(Incident.id == incident_id).first()
     if not db_incident:
         raise HTTPException(status_code=404, detail="Incident not found")
+    if current_ranger.role == "ranger":
+        if not check_ranger_can_access_area(current_ranger, db_incident.protected_area_id):
+            raise HTTPException(status_code=403, detail="Access denied: incident is in a different park")
     db_incident.is_resolved = True
     db_incident.verified = True
     db.commit()
@@ -119,7 +137,7 @@ def assign_incident(
     incident_id: int,
     ranger_id: int = Query(...),
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    admin: Ranger = Depends(require_supervisor_or_admin),
 ):
     db_incident = db.query(Incident).filter(Incident.id == incident_id).first()
     if not db_incident:
@@ -137,7 +155,7 @@ def assign_incident(
 def delete_incident(
     incident_id: int,
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    admin: Ranger = Depends(require_admin),
 ):
     db_incident = db.query(Incident).filter(Incident.id == incident_id).first()
     if not db_incident:

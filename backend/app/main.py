@@ -1,13 +1,17 @@
-﻿from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.api.endpoints import (
+    alerts,
     auth,
+    equipment,
     incidents,
+    observations,
     patrols,
+    poachers,
     predictions,
     protected_areas,
     rangers,
@@ -52,6 +56,10 @@ app.include_router(rangers.router, prefix="/api/rangers", tags=["Rangers"])
 app.include_router(protected_areas.router, prefix="/api/protected-areas", tags=["Protected Areas"])
 app.include_router(predictions.router, prefix="/api/predictions", tags=["Predictions"])
 app.include_router(stats.router, prefix="/api/stats", tags=["Statistics"])
+app.include_router(alerts.router, prefix="/api/alerts", tags=["Alerts"])
+app.include_router(equipment.router, prefix="/api/equipment", tags=["Equipment"])
+app.include_router(observations.router, prefix="/api/observations", tags=["Observations"])
+app.include_router(poachers.router, prefix="/api/poachers", tags=["Poachers"])
 
 
 @app.get("/")

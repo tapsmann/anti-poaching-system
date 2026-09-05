@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.geo import point_from_latlng
-from app.core.security import get_current_ranger
+from app.core.security import get_current_ranger, require_admin, require_supervisor_or_admin
 from app.models.report import CommunityReport
 from app.models.ranger import Ranger
 from app.schemas.schemas import ReportCreate, ReportResponse, ReportUpdate
@@ -20,7 +20,7 @@ def get_reports(
     status: str | None = None,
     report_type: str | None = None,
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    current_ranger: Ranger = Depends(get_current_ranger),
 ):
     query = db.query(CommunityReport)
     if status:
@@ -45,7 +45,7 @@ def get_report_by_id(
 
 @router.post("/", response_model=ReportResponse, status_code=201)
 def create_report(report: ReportCreate, db: Session = Depends(get_db)):
-    """Public endpoint — anonymous community reports allowed."""
+    """Public endpoint - anonymous community reports allowed."""
     risk = predict_risk_score(report.latitude, report.longitude)
     db_report = CommunityReport(
         location=point_from_latlng(report.latitude, report.longitude),
@@ -68,7 +68,7 @@ def update_report(
     report_id: int,
     report: ReportUpdate,
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    admin: Ranger = Depends(require_supervisor_or_admin),
 ):
     db_report = db.query(CommunityReport).filter(CommunityReport.id == report_id).first()
     if not db_report:
@@ -84,7 +84,7 @@ def update_report(
 def delete_report(
     report_id: int,
     db: Session = Depends(get_db),
-    _: Ranger = Depends(get_current_ranger),
+    admin: Ranger = Depends(require_admin),
 ):
     db_report = db.query(CommunityReport).filter(CommunityReport.id == report_id).first()
     if not db_report:

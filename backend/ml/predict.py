@@ -1,5 +1,6 @@
 import os
 import pickle
+import warnings
 from datetime import datetime
 from typing import Optional
 
@@ -9,6 +10,16 @@ try:
     from features import extract_training_features
 except ImportError:
     from ml.features import extract_training_features
+
+
+def _transform(scaler, X):
+    if scaler is None:
+        return X
+    if hasattr(scaler, "feature_names_in_"):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            return scaler.transform(X)
+    return scaler.transform(X)
 
 
 class PoachingPredictor:
@@ -31,32 +42,49 @@ class PoachingPredictor:
                 self.scaler = pickle.load(f)
             self.loaded = True
         except Exception as exc:
-            # A serialized sklearn model can be incompatible after a Python or
-            # dependency upgrade. Keep the API available while it is retrained.
             self.load_error = str(exc)
-            print(f"ML model unavailable; using deterministic fallback risk score: {exc}")
+            print(f"ML model unavailable; using deterministic fallback: {exc}")
 
     def predict_risk(self, lat, lng, timestamp=None):
         if timestamp is None:
             timestamp = datetime.now()
 
+        features = extract_training_features(lat, lng, timestamp)
+        feature_values = list(features.values())
+
         if not self.loaded:
-            # Explainable fallback for development/demo operation. It uses the
-            # same geographic/time features as the trained model and always
-            # returns a stable 0-100 score for the same input.
-            features = extract_training_features(lat, lng, timestamp)
             score = (
-                features["poaching_density"] * 6
-                + (20 - features["patrol_frequency"]) * 2
-                + (10 - min(features["distance_to_road"], 10)) * 1.5
-                + (15 - min(features["distance_to_river"], 15))
-                + features["moon_illumination"] * 10
+                features.get("park_risk_base", 0.3) * 30
+                + features.get("poaching_density", 0) * 3
+                + features.get("time_risk", 1.0) * 15
+                + features.get("seasonal_risk", 1.0) * 10
+                + max(0, (10 - features.get("distance_to_road", 10))) * 1.5
+                + max(0, (15 - features.get("distance_to_river", 15))) * 0.8
+                + features.get("moon_illumination", 0) * 8
+                - features.get("patrol_frequency", 0) * 1.2
             )
             return max(0.0, min(100.0, float(score)))
 
-        features = extract_training_features(lat, lng, timestamp)
-        X = np.array([list(features.values())])
-        if self.scaler is not None:
-            X = self.scaler.transform(X)
+        X = np.array([feature_values])
+        X = _transform(self.scaler, X)
         risk_prob = self.model.predict_proba(X)[0][1]
         return risk_prob * 100
+
+    def predict_risk_many(self, points, timestamp=None):
+        """Predict risk for many (lat, lng) points in a single vectorized call.
+
+        ``points`` is an iterable of (lat, lng) tuples. Returns a list of
+        scores aligned with the input order.
+        """
+        if timestamp is None:
+            timestamp = datetime.now()
+
+        features_list = [list(extract_training_features(lat, lng, timestamp).values()) for lat, lng in points]
+
+        if not self.loaded:
+            return [self.predict_risk(lat, lng, timestamp) for lat, lng in points]
+
+        X = np.array(features_list)
+        X = _transform(self.scaler, X)
+        risk_probs = self.model.predict_proba(X)[:, 1]
+        return [float(p * 100) for p in risk_probs]

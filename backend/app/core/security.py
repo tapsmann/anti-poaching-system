@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -11,17 +11,13 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.models.ranger import Ranger
 
-# Fix for bcrypt version compatibility
 try:
     import bcrypt
-    # Check if bcrypt has __about__ attribute (older versions don't)
     if not hasattr(bcrypt, '__about__'):
-        # For newer bcrypt versions, set the version manually
         pass
 except ImportError:
     pass
 
-# Create password context with explicit backend
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto",
@@ -35,14 +31,12 @@ oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_e
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     if not hashed_password:
         return False
-    # Truncate password to 72 bytes if needed (bcrypt limit)
     if len(plain_password.encode('utf-8')) > 72:
         plain_password = plain_password[:72]
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
-    # Truncate password to 72 bytes if needed (bcrypt limit)
     if len(password.encode('utf-8')) > 72:
         password = password[:72]
     return pwd_context.hash(password)
@@ -113,3 +107,53 @@ def get_optional_ranger(
         return get_ranger_from_token(token, db)
     except HTTPException:
         return None
+
+
+def require_admin(
+    current_ranger: Ranger = Depends(get_current_ranger),
+) -> Ranger:
+    if current_ranger.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required",
+        )
+    return current_ranger
+
+
+def require_supervisor_or_admin(
+    current_ranger: Ranger = Depends(get_current_ranger),
+) -> Ranger:
+    if current_ranger.role not in ("admin", "supervisor"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Supervisor or admin privileges required",
+        )
+    return current_ranger
+
+
+def check_ranger_can_access_area(ranger: Ranger, area_id: Optional[int]) -> bool:
+    if ranger.role in ("admin", "supervisor"):
+        return True
+    if area_id is None:
+        return False
+    if ranger.assigned_area_id is None:
+        return False
+    return ranger.assigned_area_id == area_id
+
+
+def scope_to_ranger_area(query, ranger: Ranger, area_column):
+    if ranger.role in ("admin", "supervisor"):
+        return query
+    if ranger.assigned_area_id is None:
+        return query.filter(area_column == -1)
+    return query.filter(area_column == ranger.assigned_area_id)
+
+
+def check_ranger_can_modify(ranger: Ranger, target_ranger_id: Optional[int] = None) -> bool:
+    if ranger.role == "admin":
+        return True
+    if ranger.role == "supervisor":
+        return True
+    if target_ranger_id and ranger.id == target_ranger_id:
+        return True
+    return False

@@ -24,8 +24,10 @@ class RangerCreate(BaseModel):
     email: EmailStr
     badge_number: str
     password: Optional[str] = None
+    role: Optional[str] = "ranger"
     rank: Optional[str] = None
     specialization: Optional[str] = None
+    assigned_area_id: Optional[int] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
 
@@ -33,8 +35,10 @@ class RangerUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
     badge_number: Optional[str] = None
+    role: Optional[str] = None
     rank: Optional[str] = None
     specialization: Optional[str] = None
+    assigned_area_id: Optional[int] = None
     is_active: Optional[bool] = None
     is_on_duty: Optional[bool] = None
 
@@ -44,12 +48,15 @@ class RangerResponse(BaseModel):
     badge_number: str
     email: str
     phone: Optional[str] = None
+    role: str = "ranger"
     rank: Optional[str] = None
     specialization: Optional[str] = None
     is_active: bool
     is_on_duty: bool
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    assigned_area_id: Optional[int] = None
+    assigned_area_name: Optional[str] = None
     hire_date: Optional[datetime] = None
     created_at: datetime
     updated_at: Optional[datetime]

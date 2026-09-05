@@ -27,7 +27,7 @@ def init_db():
         with engine.begin() as conn:
             conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
         Base.metadata.create_all(bind=engine)
-        print("✅ Database initialized successfully!")
+        print("Database initialized successfully!")
     except Exception as e:
-        print(f"❌ Database initialization failed: {e}")
+        print(f"Database initialization failed: {e}")
         raise
