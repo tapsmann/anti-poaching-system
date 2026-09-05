@@ -81,12 +81,12 @@ const Patrols = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-3">
         <div>
           <h1 className="text-2xl font-bold text-zim-800">Patrol Tracking</h1>
           <p className="text-sm text-gray-500">{patrols.length} total patrols</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button onClick={load} className="btn-outline text-sm">Refresh</button>
           <button onClick={() => setCreateOpen(true)} className="btn-primary flex items-center gap-2 text-sm">
             <Plus size={16} /> New patrol
@@ -160,7 +160,7 @@ const Patrols = () => {
               incidents={[]}
               hotspots={[]}
               route={displayRoute.map((pt) => ({ lat: pt.lat, lng: pt.lng }))}
-              height="24rem"
+              className="h-48 sm:h-64 md:h-72 lg:h-96"
               zoom={selectedPatrol ? 12 : 6}
               center={displayRoute.length > 0 ? [displayRoute[0].lng, displayRoute[0].lat] : [29.5, -19.0]}
               scrollWheelZoom={false}
@@ -183,7 +183,7 @@ const Patrols = () => {
             route={routePoints}
             drawingMode={true}
             onMapClick={(pt) => setRoutePoints((prev) => [...prev, pt])}
-            height="18rem"
+            className="h-40 sm:h-48 md:h-56 lg:h-72"
             zoom={6}
             scrollWheelZoom={true}
           />
@@ -196,24 +196,24 @@ const Patrols = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <select required value={form.ranger_id} onChange={(e) => setForm({ ...form, ranger_id: e.target.value })} className="border rounded-xl px-3 py-2">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <select required value={form.ranger_id} onChange={(e) => setForm({ ...form, ranger_id: e.target.value })} className="w-full border rounded-xl px-3 py-2">
               <option value="">Select ranger</option>
               {rangers.filter((r) => r.is_active).map((r) => (
                 <option key={r.id} value={r.id}>{r.name} ({r.assigned_area_name || 'Unassigned'})</option>
               ))}
             </select>
-            <select value={form.protected_area_id} onChange={(e) => setForm({ ...form, protected_area_id: e.target.value })} className="border rounded-xl px-3 py-2">
+            <select value={form.protected_area_id} onChange={(e) => setForm({ ...form, protected_area_id: e.target.value })} className="w-full border rounded-xl px-3 py-2">
               <option value="">Select park</option>
               {areas.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
           </div>
-          <select value={form.patrol_type} onChange={(e) => setForm({ ...form, patrol_type: e.target.value })} className="border rounded-xl px-3 py-2">
+          <select value={form.patrol_type} onChange={(e) => setForm({ ...form, patrol_type: e.target.value })} className="w-full border rounded-xl px-3 py-2">
             {patrolTypes.map((t) => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
           </select>
-          <input value={form.area_covered_km2} onChange={(e) => setForm({ ...form, area_covered_km2: e.target.value })} placeholder="Area covered (km\u00b2)" className="border rounded-xl px-3 py-2" />
-          <textarea value={form.objectives} onChange={(e) => setForm({ ...form, objectives: e.target.value })} placeholder="Patrol objectives" className="border rounded-xl px-3 py-2" />
-          <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Notes" className="border rounded-xl px-3 py-2" />
+          <input value={form.area_covered_km2} onChange={(e) => setForm({ ...form, area_covered_km2: e.target.value })} placeholder="Area covered (km²)" className="w-full border rounded-xl px-3 py-2" />
+          <textarea value={form.objectives} onChange={(e) => setForm({ ...form, objectives: e.target.value })} placeholder="Patrol objectives" className="w-full border rounded-xl px-3 py-2" />
+          <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Notes" className="w-full border rounded-xl px-3 py-2" />
           <button className="btn-primary justify-center">Create patrol</button>
         </form>
       </Modal>

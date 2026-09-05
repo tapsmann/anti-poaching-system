@@ -108,13 +108,13 @@ export default function Observations() {
           <article key={o.id} className="card-zim">
             <div className="flex flex-wrap justify-between gap-4">
               <div>
-                <div className="flex gap-3 items-center">
+                <div className="flex flex-wrap gap-3 items-center">
                   <h2 className="font-semibold text-zim-800">{o.observation_type.replace('_', ' ')}</h2>
                   {o.severity && <span className={severityColors[o.severity]}>{o.severity}</span>}
                   {o.animal_count && <span className="badge-low">{o.animal_count} animals</span>}
                 </div>
                 <p className="mt-2 text-sm text-gray-700">{o.description || 'No description'}</p>
-                <p className="mt-2 text-sm text-gray-500 flex gap-4">
+                <p className="mt-2 text-sm text-gray-500 flex flex-wrap gap-4">
                   <span className="flex gap-1"><MapPin size={14} />{o.latitude?.toFixed(4)}, {o.longitude?.toFixed(4)}</span>
                   <span>Patrol #{o.patrol_id}</span>
                   <span>{new Date(o.created_at || o.timestamp).toLocaleDateString()}</span>
@@ -137,11 +137,11 @@ export default function Observations() {
           <select value={form.observation_type} onChange={(e) => setForm({ ...form, observation_type: e.target.value })} className="border rounded-xl px-3 py-2">
             {observationTypes.map((t) => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
           </select>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input required type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="Latitude" className="border rounded-xl px-3 py-2" />
             <input required type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="Longitude" className="border rounded-xl px-3 py-2" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input type="number" value={form.animal_count} onChange={(e) => setForm({ ...form, animal_count: e.target.value })} placeholder="Animal count" className="border rounded-xl px-3 py-2" />
             <select value={form.severity} onChange={(e) => setForm({ ...form, severity: e.target.value })} className="border rounded-xl px-3 py-2">
               {['low', 'medium', 'high', 'critical'].map((s) => <option key={s} value={s}>{s}</option>)}

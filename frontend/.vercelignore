@@ -1,0 +1,17 @@
+﻿node_modules/
+.git/
+README.md
+.env
+.env.local
+.vscode/
+.idea/
+coverage/
+.nyc_output/
+.DS_Store
+*.log
+*.pem
+*.tgz
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache

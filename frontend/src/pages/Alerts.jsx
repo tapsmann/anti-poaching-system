@@ -106,13 +106,13 @@ export default function Alerts() {
                   <Bell size={20} className="text-blue-600" />
                 </div>
                 <div>
-                  <div className="flex gap-3 items-center">
+                  <div className="flex flex-wrap gap-3 items-center">
                     <h2 className="font-semibold text-zim-800">{a.alert_type.replace('_', ' ')}</h2>
                     <span className={priorityColors[a.priority]}>{a.priority}</span>
                     <span className={`${statusColors[a.status]} px-3 py-1 rounded-full text-xs font-semibold`}>{a.status}</span>
                   </div>
                   <p className="mt-2 text-sm text-gray-700">{a.message}</p>
-                  <p className="mt-2 text-sm text-gray-500 flex gap-4">
+                  <p className="mt-2 text-sm text-gray-500 flex flex-wrap gap-4">
                     {a.latitude && <span className="flex gap-1"><MapPin size={14} />{a.latitude.toFixed(4)}, {a.longitude.toFixed(4)}</span>}
                     <span>{new Date(a.created_at).toLocaleString()}</span>
                   </p>
@@ -142,7 +142,7 @@ export default function Alerts() {
             {['low', 'medium', 'high', 'critical'].map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
           <textarea required value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Alert message" className="border rounded-xl px-3 py-2" />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="Latitude" className="border rounded-xl px-3 py-2" />
             <input type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="Longitude" className="border rounded-xl px-3 py-2" />
           </div>

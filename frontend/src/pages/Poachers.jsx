@@ -104,7 +104,7 @@ export default function Poachers() {
       <div className="card-zim">
         <OpenLayersMap
           hotspots={poacherHotspots}
-          height="20rem"
+          className="h-48 sm:h-56 md:h-64 lg:h-80"
           zoom={6}
           center={[29.5, -19.0]}
           scrollWheelZoom={true}
@@ -167,7 +167,7 @@ export default function Poachers() {
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Add to Watchlist">
         <form onSubmit={create} className="grid gap-3">
           <input required value={form.alias} onChange={(e) => setForm({ ...form, alias: e.target.value })} placeholder="Alias / code name" className="border rounded-xl px-3 py-2" />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <select value={form.threat_level} onChange={(e) => setForm({ ...form, threat_level: e.target.value })} className="border rounded-xl px-3 py-2">
               {['low', 'medium', 'high', 'critical'].map((t) => <option key={t} value={t}>{t} threat</option>)}
             </select>
@@ -179,7 +179,7 @@ export default function Poachers() {
           <input value={form.nationality} onChange={(e) => setForm({ ...form, nationality: e.target.value })} placeholder="Nationality" className="border rounded-xl px-3 py-2" />
           <input value={form.identifying_marks} onChange={(e) => setForm({ ...form, identifying_marks: e.target.value })} placeholder="Identifying marks" className="border rounded-xl px-3 py-2" />
           <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description" className="border rounded-xl px-3 py-2" />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="Last known lat" className="border rounded-xl px-3 py-2" />
             <input type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="Last known lng" className="border rounded-xl px-3 py-2" />
           </div>

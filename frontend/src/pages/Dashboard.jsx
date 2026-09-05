@@ -138,7 +138,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <section className="lg:col-span-2 card-zim">
           <h2 className="text-lg font-semibold text-zim-800 mb-4">Zimbabwe Risk Map</h2>
-          <OpenLayersMap incidents={data.recent_incidents} hotspots={data.hotspots} height="22rem" />
+          <OpenLayersMap incidents={data.recent_incidents} hotspots={data.hotspots} className="h-48 sm:h-56 md:h-72 lg:h-80" />
           <p className="mt-3 text-xs text-gray-500">
             Markers show reported incidents; colored circles are ML-predicted risk zones across parks.
           </p>
@@ -247,7 +247,7 @@ const Dashboard = () => {
                 key={index}
                 className={`border-l-4 rounded-r-xl p-3 ${severityClass(incident.severity)}`}
               >
-                <div className="flex justify-between gap-4">
+                <div className="flex flex-wrap justify-between gap-4">
                   <div>
                     <p className="font-medium text-zim-900">
                       {incident.incident_type?.replaceAll("_", " ") || "Unknown incident"}

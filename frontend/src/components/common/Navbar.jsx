@@ -10,7 +10,7 @@ const Navbar = ({ onMenuClick }) => {
     : '??';
 
   return (
-    <header className="bg-white/80 backdrop-blur-sm border-b border-earth-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
+    <header className="bg-white/80 backdrop-blur-sm border-b border-earth-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-20">
       <div className="flex items-center gap-4">
         <button onClick={onMenuClick} className="lg:hidden text-zim-800">
           <Menu size={24} />

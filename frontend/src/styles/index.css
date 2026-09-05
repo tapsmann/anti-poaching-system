@@ -20,11 +20,11 @@
 
 @layer components {
   .card-zim {
-    @apply bg-white rounded-2xl shadow-md p-6 border border-white/30 hover:shadow-lg transition-all duration-300;
+    @apply bg-white rounded-2xl shadow-md p-4 sm:p-6 border border-white/30 hover:shadow-lg transition-all duration-300;
   }
 
   .card-zim-dark {
-    @apply bg-zim-800 text-white rounded-2xl shadow-lg p-6;
+    @apply bg-zim-800 text-white rounded-2xl shadow-lg p-4 sm:p-6;
   }
 
   .btn-primary {
@@ -45,7 +45,7 @@
   .badge-low { @apply bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold; }
 
   .stat-card {
-    @apply bg-white rounded-2xl p-6 shadow-md border-l-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+    @apply bg-white rounded-2xl p-4 sm:p-6 shadow-md border-l-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
   }
   .stat-card-green { @apply border-zim-600; }
   .stat-card-gold { @apply border-gold-500; }

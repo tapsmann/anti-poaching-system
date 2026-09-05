@@ -130,7 +130,7 @@ const Analytics = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <section className="card-zim">
           <h2 className="text-lg font-semibold text-zim-800 mb-4">ML Risk Heatmap</h2>
-          <OpenLayersMap incidents={analytics?.recent_incidents || []} hotspots={heatmap} height="20rem" />
+          <OpenLayersMap incidents={analytics?.recent_incidents || []} hotspots={heatmap} className="h-48 sm:h-56 md:h-64 lg:h-80" />
           <ol className="mt-4 space-y-1 text-sm text-gray-600">
             {hotspotRows.map((spot, index) => (
               <li key={`${spot.lat}-${spot.lng}`} className="flex justify-between">

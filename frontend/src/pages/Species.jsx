@@ -48,7 +48,7 @@ const Species = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-3">
         <div>
           <h1 className="text-2xl font-bold text-zim-800">Species Management</h1>
           <p className="text-sm text-gray-500">Conservation records from the backend</p>

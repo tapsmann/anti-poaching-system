@@ -207,12 +207,13 @@ export default function Incidents() {
             drawingMode={true}
             onMapClick={(pt) => setMapPos(pt)}
             height="16rem"
+            className="h-40 sm:h-48 md:h-56 lg:h-64"
             zoom={mapPos ? 12 : 6}
             center={mapPos ? [mapPos.lng, mapPos.lat] : [29.5, -19.0]}
           />
           <p className="text-xs text-gray-400">Click the map to set incident location, or enter coordinates below.</p>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <select value={form.incident_type} onChange={(e) => setForm({ ...form, incident_type: e.target.value })}>
               {types.map((t) => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
             </select>
@@ -220,11 +221,11 @@ export default function Incidents() {
               {severities.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input required type="number" step="any" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} placeholder="Latitude" className="border rounded-xl px-3 py-2" />
             <input required type="number" step="any" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} placeholder="Longitude" className="border rounded-xl px-3 py-2" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <select
               value={form.protected_area_id}
               onChange={(e) => setForm({ ...form, protected_area_id: e.target.value })}

@@ -32,7 +32,7 @@ export default function Register() {
 
   return (
     <main className="min-h-screen bg-earth-50 flex items-center justify-center p-4">
-      <form onSubmit={submit} className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl border border-earth-200">
+      <form onSubmit={submit} className="w-full max-w-md rounded-2xl bg-white p-6 sm:p-8 shadow-xl border border-earth-200">
         <h1 className="text-2xl font-bold text-zim-800">Register ranger</h1>
         <p className="mt-1 text-sm text-gray-500">Create an operations account.</p>
 

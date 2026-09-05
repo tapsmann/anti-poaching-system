@@ -92,6 +92,7 @@ const OpenLayersMap = ({
   onMapClick = null,
   onFeatureClick = null,
   height = '16rem',
+  className = '',
   center = ZIMBABWE_CENTER,
   zoom = 6,
   scrollWheelZoom = true,
@@ -270,7 +271,7 @@ const OpenLayersMap = ({
   }, [center, zoom]);
 
   return (
-    <div style={{ height }} className="rounded-xl overflow-hidden border border-earth-200">
+    <div style={className ? undefined : { height }} className={`rounded-xl overflow-hidden border border-earth-200 ${className}`}>
       <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
     </div>
   );

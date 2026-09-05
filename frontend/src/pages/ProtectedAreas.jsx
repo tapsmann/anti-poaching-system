@@ -65,7 +65,7 @@ export default function ProtectedAreas() {
         <OpenLayersMap
           parks={visible}
           incidents={[]}
-          height="28rem"
+          className="h-56 sm:h-64 md:h-80 lg:h-[28rem]"
           zoom={6}
           center={[29.5, -19.0]}
           scrollWheelZoom={true}
@@ -113,7 +113,7 @@ export default function ProtectedAreas() {
         {selected && (
           <div className="space-y-3">
             <p className="text-sm text-gray-600">{selected.description}</p>
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div><strong>Type:</strong> {selected.zone_type?.replace('_', ' ')}</div>
               <div><strong>Risk:</strong> {selected.risk_level}</div>
               <div><strong>Size:</strong> {(selected.size_hectares / 100).toFixed(1)} km\u00b2</div>

@@ -95,13 +95,13 @@ export default function Reports() {
             <article key={r.id} className="card-zim cursor-pointer" onClick={() => setSelected(r)}>
               <div className="flex flex-wrap justify-between gap-4">
                 <div className="flex-1">
-                  <div className="flex gap-3 items-center">
+                  <div className="flex flex-wrap gap-3 items-center">
                     <h2 className="font-semibold text-zim-800">{r.report_type?.replace('_', ' ') || 'General report'}</h2>
                     <span className={statusColors[r.status] || 'badge-medium'}>{r.status}</span>
                     {r.is_anonymous && <span className="text-xs text-gray-400">Anonymous</span>}
                   </div>
                   <p className="mt-2 text-sm text-gray-700">{r.description}</p>
-                  <p className="mt-2 text-sm text-gray-500 flex gap-4">
+                  <p className="mt-2 text-sm text-gray-500 flex flex-wrap gap-4">
                     <span className="flex gap-1">
                       <MapPin size={14} />
                       {r.latitude?.toFixed(4)}, {r.longitude?.toFixed(4)}
@@ -132,7 +132,7 @@ export default function Reports() {
               {selected.is_anonymous && <span className="text-xs text-gray-400">Anonymous</span>}
             </div>
             <p className="text-sm text-gray-700">{selected.description}</p>
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div><strong>Risk score:</strong> {Math.round(selected.risk_score || 0)}%</div>
               <div><strong>Phone:</strong> {selected.reporter_phone || 'Hidden'}</div>
               <div><strong>Location:</strong> {selected.latitude?.toFixed(4)}, {selected.longitude?.toFixed(4)}</div>

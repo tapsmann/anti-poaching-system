@@ -28,7 +28,7 @@ const Login = () => {
 
   return (
     <main className="min-h-screen bg-earth-50 flex items-center justify-center p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl border border-earth-200">
+      <form onSubmit={handleSubmit} className="w-full max-w-md rounded-2xl bg-white p-6 sm:p-8 shadow-xl border border-earth-200">
         <div className="flex items-center gap-3 mb-7">
           <div className="p-3 rounded-xl bg-zim-700 text-gold-400">
             <ShieldCheck size={28} />
