@@ -21,6 +21,8 @@ const Patrols = () => {
   const [form, setForm] = useState(blankForm);
   const [routePoints, setRoutePoints] = useState([]);
   const [selectedPatrol, setSelectedPatrol] = useState(null);
+  const [mapCenter, setMapCenter] = useState([29.5, -19.0]);
+  const [mapZoom, setMapZoom] = useState(6);
 
   const load = async () => {
     try {
@@ -161,8 +163,8 @@ const Patrols = () => {
               hotspots={[]}
               route={displayRoute.map((pt) => ({ lat: pt.lat, lng: pt.lng }))}
               className="h-48 sm:h-64 md:h-72 lg:h-96"
-              zoom={selectedPatrol ? 12 : 6}
-              center={displayRoute.length > 0 ? [displayRoute[0].lng, displayRoute[0].lat] : [29.5, -19.0]}
+              zoom={mapZoom}
+              center={mapCenter}
               scrollWheelZoom={false}
             />
             {selectedPatrol && (
@@ -203,7 +205,14 @@ const Patrols = () => {
                 <option key={r.id} value={r.id}>{r.name} ({r.assigned_area_name || 'Unassigned'})</option>
               ))}
             </select>
-            <select value={form.protected_area_id} onChange={(e) => setForm({ ...form, protected_area_id: e.target.value })} className="w-full border rounded-xl px-3 py-2">
+            <select value={form.protected_area_id} onChange={(e) => {
+            setForm({ ...form, protected_area_id: e.target.value });
+            const selectedArea = areas.find((a) => a.id === Number(e.target.value));
+            if (selectedArea) {
+              setMapCenter([selectedArea.center_lng, selectedArea.center_lat]);
+              setMapZoom(8);
+            }
+          }} className="w-full border rounded-xl px-3 py-2">
               <option value="">Select park</option>
               {areas.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>

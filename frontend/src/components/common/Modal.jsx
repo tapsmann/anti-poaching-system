@@ -10,7 +10,6 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md', wide }) => {
       if (event.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', onKeyDown);
-    closeButtonRef.current?.focus();
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [isOpen, onClose]);
 
