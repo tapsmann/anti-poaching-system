@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Search, TreePine } from 'lucide-react';
 import { protectedAreasApi, statsApi } from '../api/endpoints';
+import { getParkCenter } from '../data/parkCoordinates';
 import Modal from '../components/common/Modal';
 import OpenLayersMap from '../components/maps/OpenLayersMap';
 
@@ -19,6 +20,11 @@ export default function ProtectedAreas() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState(null);
+  const [mapCenter, setMapCenter] = useState([29.5, -19.0]);
+  const [mapZoom, setMapZoom] = useState(6);
+
+  const getErrorMessage = (e, fallback) =>
+    e?.response?.data?.detail || e?.message || fallback;
 
   const load = async () => {
     try {
@@ -30,13 +36,28 @@ export default function ProtectedAreas() {
       setAreas(aRes.data || []);
       setIncidentsByPark(sRes.data.incidents_by_park || []);
     } catch (e) {
-      setError(e.response?.data?.detail || 'Unable to load protected areas.');
+      setError(getErrorMessage(e, 'Unable to load protected areas.'));
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => { load(); }, []);
+
+  const zoomToArea = (area) => {
+    setSelected(area);
+    const parkCenter = getParkCenter(area);
+    if (parkCenter) {
+      setMapCenter([parkCenter.lng, parkCenter.lat]);
+      setMapZoom(10);
+    }
+  };
+
+  const resetView = () => {
+    setSelected(null);
+    setMapCenter([29.5, -19.0]);
+    setMapZoom(6);
+  };
 
   const visible = areas.filter((a) =>
     `${a.name} ${a.zone_type || ''} ${a.description || ''}`.toLowerCase().includes(query.toLowerCase())
@@ -62,12 +83,22 @@ export default function ProtectedAreas() {
       {error && <p className="card-zim text-red-700">{error}</p>}
 
       <div className="card-zim">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <p className="text-sm text-gray-500">
+            {selected ? `Zoomed to ${selected.name} — click Reset to see all parks` : 'Click a park card below to zoom the map'}
+          </p>
+          {selected && (
+            <button onClick={resetView} className="text-sm text-zim-700 border border-zim-200 rounded-lg px-3 py-1 hover:bg-zim-50">
+              Reset view
+            </button>
+          )}
+        </div>
         <OpenLayersMap
           parks={visible}
           incidents={[]}
           className="h-56 sm:h-64 md:h-80 lg:h-[28rem]"
-          zoom={6}
-          center={[29.5, -19.0]}
+          center={mapCenter}
+          zoom={mapZoom}
           scrollWheelZoom={true}
         />
       </div>
@@ -86,8 +117,8 @@ export default function ProtectedAreas() {
         {visible.map((area) => (
           <article
             key={area.id}
-            className="card-zim cursor-pointer hover:border-zim-300"
-            onClick={() => setSelected(area)}
+            className={`card-zim cursor-pointer hover:border-zim-300 ${selected?.id === area.id ? 'border-zim-500 ring-2 ring-zim-200' : ''}`}
+            onClick={() => zoomToArea(area)}
           >
             <div className="flex items-start gap-3">
               <div className="p-2 rounded-lg" style={{ backgroundColor: (zoneColors[area.zone_type] || '#666') + '20' }}>

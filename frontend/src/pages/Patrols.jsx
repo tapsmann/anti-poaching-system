@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle, Clock, MapPin, Plus, Users, Trash2 } from 'lucide-react';
 import { patrolsApi, rangersApi, protectedAreasApi } from '../api/endpoints';
+import { getParkCenter } from '../data/parkCoordinates';
 import Modal from '../components/common/Modal';
 import OpenLayersMap from '../components/maps/OpenLayersMap';
 
@@ -24,6 +25,9 @@ const Patrols = () => {
   const [mapCenter, setMapCenter] = useState([29.5, -19.0]);
   const [mapZoom, setMapZoom] = useState(6);
 
+  const getErrorMessage = (e, fallback) =>
+    e?.response?.data?.detail || e?.message || fallback;
+
   const load = async () => {
     try {
       setError('');
@@ -34,7 +38,7 @@ const Patrols = () => {
       setRangers(rRes.data || []);
       setAreas(aRes.data || []);
     } catch (e) {
-      setError(e.response?.data?.detail || 'Unable to load patrols.');
+      setError(getErrorMessage(e, 'Unable to load patrols.'));
     } finally {
       setLoading(false);
     }
@@ -47,7 +51,7 @@ const Patrols = () => {
       await patrolsApi.complete(id);
       await load();
     } catch (e) {
-      setError(e.response?.data?.detail || 'Unable to complete patrol.');
+      setError(getErrorMessage(e, 'Unable to complete patrol.'));
     }
   };
 
@@ -57,13 +61,20 @@ const Patrols = () => {
       setError('Click the map to add at least 2 route points.');
       return;
     }
+    if (!form.ranger_id) {
+      setError('Select a ranger for this patrol.');
+      return;
+    }
     try {
+      setError('');
       await patrolsApi.create({
         ...form,
         ranger_id: Number(form.ranger_id),
         protected_area_id: form.protected_area_id ? Number(form.protected_area_id) : null,
-        area_covered_km2: form.area_covered_km2 ? Number(form.area_covered_km2) : null,
-        route: routePoints.map((pt) => ({ lat: pt.lat, lng: pt.lng })),
+        area_covered_km2: form.area_covered_km2 === '' || form.area_covered_km2 == null ? null : Number(form.area_covered_km2),
+        objectives: form.objectives || null,
+        notes: form.notes || null,
+        route: routePoints.map((pt) => ({ lat: Number(pt.lat), lng: Number(pt.lng) })),
         start_time: new Date().toISOString(),
       });
       setCreateOpen(false);
@@ -71,7 +82,7 @@ const Patrols = () => {
       setRoutePoints([]);
       await load();
     } catch (e) {
-      setError(e.response?.data?.detail || 'Unable to create patrol.');
+      setError(getErrorMessage(e, 'Unable to create patrol.'));
     }
   };
 
@@ -186,7 +197,8 @@ const Patrols = () => {
             drawingMode={true}
             onMapClick={(pt) => setRoutePoints((prev) => [...prev, pt])}
             className="h-40 sm:h-48 md:h-56 lg:h-72"
-            zoom={6}
+            center={mapCenter}
+            zoom={mapZoom}
             scrollWheelZoom={true}
           />
           <div className="flex items-center justify-between text-xs text-gray-500">
@@ -205,14 +217,20 @@ const Patrols = () => {
                 <option key={r.id} value={r.id}>{r.name} ({r.assigned_area_name || 'Unassigned'})</option>
               ))}
             </select>
-            <select value={form.protected_area_id} onChange={(e) => {
-            setForm({ ...form, protected_area_id: e.target.value });
-            const selectedArea = areas.find((a) => a.id === Number(e.target.value));
-            if (selectedArea) {
-              setMapCenter([selectedArea.center_lng, selectedArea.center_lat]);
-              setMapZoom(8);
-            }
-          }} className="w-full border rounded-xl px-3 py-2">
+<select value={form.protected_area_id} onChange={(e) => {
+             setForm({ ...form, protected_area_id: e.target.value });
+             if (!e.target.value) {
+               setMapCenter([29.5, -19.0]);
+               setMapZoom(6);
+               return;
+             }
+             const selectedArea = areas.find((a) => a.id === Number(e.target.value));
+             const parkCenter = selectedArea ? getParkCenter(selectedArea) : null;
+             if (parkCenter) {
+               setMapCenter([parkCenter.lng, parkCenter.lat]);
+               setMapZoom(10);
+             }
+           }} className="w-full border rounded-xl px-3 py-2">
               <option value="">Select park</option>
               {areas.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
