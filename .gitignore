@@ -39,6 +39,9 @@ dist/
 build/
 *.egg-info/
 
+# Uploads
+backend/uploads/
+
 # Logs
 *.log
 .vercel

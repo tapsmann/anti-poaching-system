@@ -25,6 +25,13 @@ export const speciesApi = {
   create: (data) => apiClient.post("/species", data).catch(handleApiError),
   update: (id, data) => apiClient.put(`/species/${id}`, data).catch(handleApiError),
   delete: (id) => apiClient.delete(`/species/${id}`).catch(handleApiError),
+  uploadImage: (id, file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiClient.post(`/species/upload?species_id=${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }).catch(handleApiError);
+  },
 };
 
 // Incidents
