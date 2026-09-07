@@ -93,7 +93,7 @@ const Login = () => {
         </div>
 
         <p className="mt-3 text-xs text-gray-500 text-center">
-          Seed account: thandeka.ncube@zimparks.co.zw / ranger123
+          Input your ranger email and password to sign in.
         </p>
       </form>
     </main>
