@@ -70,7 +70,7 @@ export const reportsApi = {
 
 // Protected Areas
 export const protectedAreasApi = {
-  getAll: () => apiClient.get("/protected-areas").catch(handleApiError),
+  getAll: (config) => apiClient.get("/protected-areas", config).catch(handleApiError),
   getById: (id) => apiClient.get(`/protected-areas/${id}`).catch(handleApiError),
   create: (data) => apiClient.post("/protected-areas", data).catch(handleApiError),
   update: (id, data) => apiClient.put(`/protected-areas/${id}`, data).catch(handleApiError),

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/common/Layout';
 import Dashboard from './pages/Dashboard';
 import Incidents from './pages/Incidents';
@@ -32,6 +32,7 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
+              <Route path="dashboard" element={<Dashboard />} />
               <Route path="incidents" element={<Incidents />} />
               <Route path="species" element={<Species />} />
               <Route path="rangers" element={<Rangers />} />
@@ -43,7 +44,12 @@ function App() {
               <Route path="observations" element={<Observations />} />
               <Route path="poachers" element={<Poachers />} />
               <Route path="alerts" element={<Alerts />} />
+              {/* Unknown authed path -> dashboard */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
+            {/* Default entry + any unknown path -> login (ProtectedRoute
+                bounces unauthenticated users here, preserving `state.from`) */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

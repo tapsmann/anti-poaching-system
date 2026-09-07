@@ -46,8 +46,11 @@ apiClient.interceptors.response.use(
     // Handle 401 Unauthorized
     if (error.response?.status === 401) {
       localStorage.removeItem("access_token");
-      // Avoid redirect loop
-      if (window.location.pathname !== "/login") {
+      // Public pages (register, password reset) opt out via
+      // `skipAuthRedirect: true` so a 401 there doesn't yank the user away.
+      // Avoid redirect loop on the login page itself.
+      const skipRedirect = error.config?.skipAuthRedirect;
+      if (!skipRedirect && window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
     }

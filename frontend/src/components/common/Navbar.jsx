@@ -1,9 +1,16 @@
 import React from 'react';
 import { Search, Bell, LogOut, Menu, MapPin, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const Navbar = ({ onMenuClick }) => {
   const { ranger, logout, isAdmin, role } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   const initials = ranger?.name
     ? ranger.name.split(' ').map((n) => n[0]).join('').slice(0, 2)
@@ -55,7 +62,7 @@ const Navbar = ({ onMenuClick }) => {
             {ranger?.name || 'Unknown'}
           </span>
           <button
-            onClick={logout}
+            onClick={handleLogout}
             title="Sign out"
             className="p-2 hover:bg-red-50 rounded-full transition-colors text-gray-500 hover:text-red-600"
           >

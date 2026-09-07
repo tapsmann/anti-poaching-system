@@ -10,7 +10,8 @@ export default function Register() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    protectedAreasApi.getAll().then(({ data }) => setAreas(data || [])).catch(() => {});
+    // Public page: no token yet, so opt out of the 401 -> /login redirect.
+    protectedAreasApi.getAll({ skipAuthRedirect: true }).then(({ data }) => setAreas(data || [])).catch(() => {});
   }, []);
 
   const submit = async (event) => {

@@ -1,15 +1,22 @@
 ﻿import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { AlertTriangle, Loader2, ShieldCheck } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
-  const { login } = useAuth();
+  const { login, ranger, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("thandeka.ncube@zimparks.co.zw");
   const [password, setPassword] = useState("ranger123");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Already signed in -> don't show the form, go to the app
+  // (or back to the page that bounced us here).
+  if (!authLoading && ranger) {
+    return <Navigate to={location.state?.from?.pathname || "/"} replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,9 +25,9 @@ const Login = () => {
 
     try {
       await login(email, password);
-      navigate("/", { replace: true });
+      navigate(location.state?.from?.pathname || "/", { replace: true });
     } catch (err) {
-      setError(err.response?.data?.detail || "Unable to sign in. Check your email and password.");
+      setError(err?.response?.data?.detail || err?.message || "Unable to sign in. Check your email and password.");
     } finally {
       setLoading(false);
     }
