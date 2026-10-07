@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import Layout from './components/common/Layout';
 import Dashboard from './pages/Dashboard';
 import Incidents from './pages/Incidents';
@@ -51,6 +52,7 @@ function App() {
                 bounces unauthenticated users here, preserving `state.from`) */}
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
+          <SpeedInsights />
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>
